@@ -9,7 +9,7 @@ services:
           path: ./backend
           target: /app
     ports:
-      - "3000:3000"
+      - "8080:3000"
     environment:
       # Docker compose uses HOSTNAME as the container name
       # need to be unique for each container
