@@ -600,7 +600,8 @@ export default function ItemsPage() {
             </div>
           </header>
 
-          <div className="overflow-x-auto rounded-2xl border border-white/5">
+          {/* Desktop: Table view */}
+          <div className="hidden overflow-x-auto rounded-2xl border border-white/5 md:block">
             <table className="min-w-full text-sm">
               <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-slate-400">
                 <tr>
@@ -641,6 +642,54 @@ export default function ItemsPage() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile: Tiles view */}
+          <div className="space-y-3 md:hidden">
+            {(inventoryQuery.data?.items ?? []).map((record) => (
+              <div
+                key={record.id}
+                className={`rounded-2xl border p-4 ${
+                  selectedInventory?.id === record.id
+                    ? 'border-cyan-500/50 bg-cyan-500/10'
+                    : 'border-white/5 bg-white/5'
+                }`}
+              >
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs uppercase tracking-wide text-slate-400">Store</p>
+                    <p className="text-base font-semibold text-white">{record.store?.name ?? record.store_id}</p>
+                  </div>
+                  <button
+                    className={`ml-2 rounded-xl px-3 py-1 text-xs ${
+                      selectedInventory?.id === record.id
+                        ? 'border border-cyan-500/50 text-cyan-100'
+                        : 'border border-white/10 text-slate-300'
+                    }`}
+                    onClick={() => handleInventorySelect(record)}
+                  >
+                    Inspect
+                  </button>
+                </div>
+                <div className="mb-2">
+                  <p className="text-xs uppercase tracking-wide text-slate-400">SKU</p>
+                  <p className="text-sm text-slate-200">{record.sku?.name ?? record.sku_id}</p>
+                </div>
+                <div className="mb-2">
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Quantity</p>
+                  <p className="text-2xl font-bold text-white">{record.quantity}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-400">Updated</p>
+                  <p className="text-xs text-slate-400">{new Date(record.updated_at).toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+            {inventoryQuery.data?.items?.length === 0 && (
+              <div className="rounded-2xl border border-white/5 bg-white/5 p-6 text-center text-slate-400">
+                No inventory records match this filter.
+              </div>
+            )}
           </div>
 
           <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
