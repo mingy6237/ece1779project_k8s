@@ -12,7 +12,7 @@ describe('loginRequest', () => {
       user: { id: '1', username: 'testuser', email: 'test@example.com' },
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => mockResponse,
@@ -33,7 +33,7 @@ describe('loginRequest', () => {
   });
 
   it('should throw an error when response is not ok', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 401,
       json: async () => ({ message: 'Invalid credentials' }),
@@ -57,7 +57,7 @@ describe('createApiClient', () => {
   it('should include Authorization header in requests', async () => {
     const mockUser = { id: '1', username: 'testuser', email: 'test@example.com', role: 'staff' };
 
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => mockUser,
@@ -84,7 +84,7 @@ describe('createApiClient', () => {
   });
 
   it('should build query parameters correctly', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => ({ users: [], total: 0, page: 1, limit: 10 }),
@@ -99,7 +99,7 @@ describe('createApiClient', () => {
   });
 
   it('should handle 204 No Content responses', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 204,
     });
