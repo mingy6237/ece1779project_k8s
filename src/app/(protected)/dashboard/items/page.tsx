@@ -475,11 +475,16 @@ export default function ItemsPage() {
           )}
         </div>
 
-        <div className="flex items-center justify-between text-xs text-slate-400">
-          <span>
-            Page {skuFilters.page} of {skuQuery.data?.total_pages ?? 1}
-          </span>
-          <div className="flex gap-2">
+        <div className="flex flex-col gap-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <span>
+              Showing {(((skuFilters.page ?? 1) - 1) * (skuFilters.page_size ?? 20)) + 1}-{Math.min((skuFilters.page ?? 1) * (skuFilters.page_size ?? 20), skuQuery.data?.total ?? 0)} of {skuQuery.data?.total ?? 0} items
+            </span>
+            <span className="text-slate-500">
+              Page {skuFilters.page} of {skuQuery.data?.total_pages ?? 1}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             <button
               className="btn-secondary px-3 py-1 text-xs disabled:opacity-50"
               disabled={skuFilters.page === 1}
@@ -487,6 +492,20 @@ export default function ItemsPage() {
             >
               Previous
             </button>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500">Go to:</span>
+              <input
+                type="number"
+                min="1"
+                max={skuQuery.data?.total_pages ?? 1}
+                value={skuFilters.page}
+                onChange={(e) => {
+                  const page = Math.max(1, Math.min(parseInt(e.target.value) || 1, skuQuery.data?.total_pages ?? 1));
+                  setSkuFilters((prev) => ({ ...prev, page }));
+                }}
+                className="w-16 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-center text-white focus:border-cyan-500/50 focus:outline-none"
+              />
+            </div>
             <button
               className="btn-secondary px-3 py-1 text-xs disabled:opacity-50"
               disabled={skuFilters.page === (skuQuery.data?.total_pages ?? 1)}
@@ -692,11 +711,16 @@ export default function ItemsPage() {
             )}
           </div>
 
-          <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
-            <span>
-              Page {inventoryFilters.page} of {inventoryQuery.data?.total_pages ?? 1}
-            </span>
-            <div className="flex gap-2">
+          <div className="mt-4 flex flex-col gap-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-1">
+              <span>
+                Showing {((inventoryFilters.page - 1) * inventoryFilters.page_size) + 1}-{Math.min(inventoryFilters.page * inventoryFilters.page_size, inventoryQuery.data?.total ?? 0)} of {inventoryQuery.data?.total ?? 0} items
+              </span>
+              <span className="text-slate-500">
+                Page {inventoryFilters.page} of {inventoryQuery.data?.total_pages ?? 1}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 className="btn-secondary px-3 py-1 text-xs disabled:opacity-50"
                 disabled={inventoryFilters.page === 1}
@@ -704,6 +728,20 @@ export default function ItemsPage() {
               >
                 Previous
               </button>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500">Go to:</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={inventoryQuery.data?.total_pages ?? 1}
+                  value={inventoryFilters.page}
+                  onChange={(e) => {
+                    const page = Math.max(1, Math.min(parseInt(e.target.value) || 1, inventoryQuery.data?.total_pages ?? 1));
+                    setInventoryFilters((prev) => ({ ...prev, page }));
+                  }}
+                  className="w-16 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-center text-white focus:border-cyan-500/50 focus:outline-none"
+                />
+              </div>
               <button
                 className="btn-secondary px-3 py-1 text-xs disabled:opacity-50"
                 disabled={inventoryFilters.page === (inventoryQuery.data?.total_pages ?? 1)}
