@@ -6,6 +6,8 @@ import { Trash2Icon, DownloadIcon } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useInventoryUpdates } from '@/context/inventory-updates-context';
 import { useApiQuery } from '@/hooks/useApiQuery';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { Toast } from '@/components/Toast';
 import {
   CreateInventoryRequest,
   InventoryRecord,
@@ -35,7 +37,7 @@ export default function ItemsPage() {
   });
 
   const [selectedInventory, setSelectedInventory] = useState<InventoryRecord | null>(null);
-  const [adjustQuantity, setAdjustQuantity] = useState(0);
+  const [adjustQuantity, setAdjustQuantity] = useState<string | number>(0);
   const [setQuantity, setSetQuantity] = useState<number | ''>('');
   const [inventoryError, setInventoryError] = useState<string | null>(null);
   const [creatingInventory, setCreatingInventory] = useState(false);
@@ -44,6 +46,17 @@ export default function ItemsPage() {
     store_id: '',
     quantity: 0,
   });
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  const [toast, setToast] = useState<{
+    isOpen: boolean;
+    message: string;
+    variant: 'success' | 'error' | 'info';
+  }>({ isOpen: false, message: '', variant: 'info' });
 
   const skuFetcher = useCallback(() => (api ? api.listSkus(skuFilters) : Promise.resolve(null)), [api, skuFilters]);
   const skuQuery = useApiQuery(api ? skuFetcher : null);
@@ -136,26 +149,31 @@ export default function ItemsPage() {
     if (!api || !selectedInventory) return;
     setInventoryError(null);
 
-    // Validation
-    if (adjustQuantity === 0) {
+    // Convert to number and validate
+    const delta = typeof adjustQuantity === 'string' ? parseFloat(adjustQuantity) : adjustQuantity;
+    if (isNaN(delta)) {
+      setInventoryError('Please enter a valid number');
+      return;
+    }
+    if (delta === 0) {
       setInventoryError('Adjust delta cannot be zero');
       return;
     }
-    if (adjustQuantity < -1000000) {
+    if (delta < -1000000) {
       setInventoryError('Adjust delta cannot be less than -1,000,000');
       return;
     }
-    if (adjustQuantity > 1000000) {
+    if (delta > 1000000) {
       setInventoryError('Adjust delta cannot be greater than 1,000,000');
       return;
     }
-    if (selectedInventory.quantity + adjustQuantity < 0) {
-      setInventoryError(`Cannot adjust by ${adjustQuantity}. Result would be negative (current: ${selectedInventory.quantity})`);
+    if (selectedInventory.quantity + delta < 0) {
+      setInventoryError(`Cannot adjust by ${delta}. Result would be negative (current: ${selectedInventory.quantity})`);
       return;
     }
 
     try {
-      const updated = await api.adjustInventory(selectedInventory.id, { delta_quantity: adjustQuantity });
+      const updated = await api.adjustInventory(selectedInventory.id, { delta_quantity: delta });
       setSelectedInventory(updated);
       setAdjustQuantity(0);
       inventoryQuery.reload();
@@ -248,21 +266,28 @@ export default function ItemsPage() {
     }
   };
 
-  const handleDeleteSku = async (sku: SKU) => {
+  const handleDeleteSku = (sku: SKU) => {
     if (!api) return;
-    if (!confirm(`Delete SKU ${sku.name}? This cannot be undone.`)) return;
-    try {
-      await api.deleteSku(sku.id);
-      skuQuery.reload();
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to delete SKU');
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete SKU',
+      message: `Delete SKU "${sku.name}"? This action cannot be undone and will permanently remove the SKU metadata.`,
+      onConfirm: async () => {
+        try {
+          await api.deleteSku(sku.id);
+          skuQuery.reload();
+          setToast({ isOpen: true, message: 'SKU deleted successfully', variant: 'success' });
+        } catch (error) {
+          setToast({ isOpen: true, message: error instanceof Error ? error.message : 'Failed to delete SKU', variant: 'error' });
+        }
+      },
+    });
   };
 
   const handleDownloadCSV = () => {
     const items = skuQuery.data?.items ?? [];
     if (items.length === 0) {
-      alert('No items to download');
+      setToast({ isOpen: true, message: 'No items to download', variant: 'info' });
       return;
     }
 
@@ -787,7 +812,7 @@ export default function ItemsPage() {
                     type="number"
                     className="input"
                     value={adjustQuantity}
-                    onChange={(e) => setAdjustQuantity(Number(e.target.value))}
+                    onChange={(e) => setAdjustQuantity(e.target.value)}
                     placeholder="e.g. -5 or 10"
                   />
                   <button className="btn-primary" onClick={handleAdjust}>
@@ -835,6 +860,24 @@ export default function ItemsPage() {
           )}
         </div>
       </section>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+
+      <Toast
+        isOpen={toast.isOpen}
+        onClose={() => setToast({ ...toast, isOpen: false })}
+        message={toast.message}
+        variant={toast.variant}
+      />
     </div>
   );
 }
