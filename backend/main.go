@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"gorm.io/gorm"
+
 	"inventory-manager-server/cache"
 	"inventory-manager-server/config"
 	"inventory-manager-server/database"
@@ -64,19 +66,30 @@ func main() {
 	go outboxService.StartOutboxProcessor()
 	log.Println("Outbox processor background task started")
 
-	// Create admin user
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("adminadmin"), bcrypt.DefaultCost)
-	if err != nil {
-		log.Printf("Warning: Failed to hash password: %v (continuing without admin user)", err)
-	}
-	user := models.User{
-		Username:     "admin",
-		PasswordHash: string(hashedPassword),
-		Email:        "admin@admin.com",
-		Role:         "manager",
-	}
-	if err := database.DB.Create(&user).Error; err != nil {
-		log.Printf("Warning: Failed to create admin user: %v (continuing without admin user)", err)
+	// Create admin user if not exists
+	var adminUser models.User
+	result := database.DB.Where("username = ?", "admin").First(&adminUser)
+	if result.Error != nil && result.Error == gorm.ErrRecordNotFound {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("adminadmin"), bcrypt.DefaultCost)
+		if err != nil {
+			log.Printf("Warning: Failed to hash password: %v (continuing without admin user)", err)
+		} else {
+			user := models.User{
+				Username:     "admin",
+				PasswordHash: string(hashedPassword),
+				Email:        "admin@admin.com",
+				Role:         "manager",
+			}
+			if err := database.DB.Create(&user).Error; err != nil {
+				log.Printf("Warning: Failed to create admin user: %v (continuing without admin user)", err)
+			} else {
+				log.Println("Admin user created.")
+			}
+		}
+	} else if result.Error == nil {
+		log.Println("Admin user already exists. Skipping creation.")
+	} else {
+		log.Printf("Warning: Could not verify if admin user exists: %v", result.Error)
 	}
 	// Setup routes
 	router := routes.SetupRoutes()

@@ -31,9 +31,9 @@ func NewInventoryService() *InventoryService {
 
 // GetInventory gets inventory with caching, filtering, sorting, and pagination
 // userID and userRole are used to determine allowed stores for staff members
-func (s *InventoryService) GetInventory(params dto.InventoryQueryParams, userID *uuid.UUID, userRole string) (*dto.InventoryListResponse, error) {
+func (s *InventoryService) GetInventory(params dto.InventoryQueryParams, storeID *uuid.UUID, skuID *uuid.UUID, userID *uuid.UUID, userRole string) (*dto.InventoryListResponse, error) {
 	// Build cache key
-	cacheKey := s.buildCacheKey(params, userID, userRole)
+	cacheKey := s.buildCacheKey(params, storeID, skuID, userID, userRole)
 
 	// Try to get from cache
 	if cache.Client != nil {
@@ -51,8 +51,8 @@ func (s *InventoryService) GetInventory(params dto.InventoryQueryParams, userID 
 
 	// Apply filters
 	// StoreID: nil means all stores (for manager) or all assigned stores (for staff), non-nil means specific store
-	if params.StoreID != nil {
-		query = query.Where("store_id = ?", *params.StoreID)
+	if storeID != nil {
+		query = query.Where("store_id = ?", *storeID)
 	} else if userRole == "staff" && userID != nil {
 		// For staff without specific store_id, query their allowed stores
 		var storeUsers []models.StoreUser
@@ -75,8 +75,8 @@ func (s *InventoryService) GetInventory(params dto.InventoryQueryParams, userID 
 	}
 	// SKUID: nil means all SKUs, non-nil means specific SKU
 	// When SKUID is nil, return all SKUs' inventory for the specified store(s)
-	if params.SKUID != nil {
-		query = query.Where("sku_id = ?", *params.SKUID)
+	if skuID != nil {
+		query = query.Where("sku_id = ?", *skuID)
 	}
 
 	// Get total count
@@ -509,10 +509,10 @@ func (s *InventoryService) DeleteInventory(id uuid.UUID, userID uuid.UUID, userN
 }
 
 // buildCacheKey builds a cache key for inventory query
-func (s *InventoryService) buildCacheKey(params dto.InventoryQueryParams, userID *uuid.UUID, userRole string) string {
+func (s *InventoryService) buildCacheKey(params dto.InventoryQueryParams, storeID *uuid.UUID, skuID *uuid.UUID, userID *uuid.UUID, userRole string) string {
 	parts := []string{"inventory"}
-	if params.StoreID != nil {
-		parts = append(parts, "store", params.StoreID.String())
+	if storeID != nil {
+		parts = append(parts, "store", storeID.String())
 	} else if userRole == "staff" && userID != nil {
 		// For staff, query allowed stores and include in cache key
 		var storeUsers []models.StoreUser
@@ -529,8 +529,8 @@ func (s *InventoryService) buildCacheKey(params dto.InventoryQueryParams, userID
 	} else {
 		parts = append(parts, "store", "all")
 	}
-	if params.SKUID != nil {
-		parts = append(parts, "sku", params.SKUID.String())
+	if skuID != nil {
+		parts = append(parts, "sku", skuID.String())
 	}
 	parts = append(parts, "page", strconv.Itoa(params.Page))
 	parts = append(parts, "size", strconv.Itoa(params.PageSize))

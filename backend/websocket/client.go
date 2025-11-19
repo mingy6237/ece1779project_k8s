@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"inventory-manager-server/utils"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -34,18 +36,21 @@ const (
 
 // Client represents a WebSocket client connection
 type Client struct {
-	Hub  *HubType
-	Conn *websocket.Conn
-	Send chan []byte
-	// User information can be added here if per-user filtering is needed
+	Hub    *HubType
+	Conn   *websocket.Conn
+	Send   chan []byte
+	UserID string
+	Role   string
 }
 
 // NewClient creates a new client
-func NewClient(conn *websocket.Conn) *Client {
+func NewClient(conn *websocket.Conn, userID string, role string) *Client {
 	return &Client{
-		Hub:  Hub,
-		Conn: conn,
-		Send: make(chan []byte, 256),
+		Hub:    Hub,
+		Conn:   conn,
+		Send:   make(chan []byte, 256),
+		UserID: userID,
+		Role:   role,
 	}
 }
 
@@ -124,18 +129,36 @@ func (c *Client) WritePump() {
 
 // ServeWS handles WebSocket upgrade request
 func ServeWS(w http.ResponseWriter, r *http.Request) {
-	if Hub == nil {
-		log.Printf("WebSocket Hub not initialized")
+	// Extract token from query parameter
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		http.Error(w, "Unauthorized: token parameter required", http.StatusUnauthorized)
 		return
 	}
 
+	// Validate token
+	claims, err := utils.ValidateToken(token)
+	if err != nil {
+		http.Error(w, "Unauthorized: invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+
+	// Hub check
+	if Hub == nil {
+		log.Printf("WebSocket Hub not initialized")
+		http.Error(w, "Service unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	// Upgrade connection
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("WebSocket upgrade error: %v", err)
 		return
 	}
 
-	client := NewClient(conn)
+	// Create client with user info from claims
+	client := NewClient(conn, claims.UserID.String(), claims.Role)
 	Hub.Register(client)
 
 	// Start client goroutines

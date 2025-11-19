@@ -18,8 +18,8 @@ CREATE TABLE users (
 -- Store table
 CREATE TABLE stores (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
-    name VARCHAR(100) NOT NULL,
-    address VARCHAR(255) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    address VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -38,7 +38,7 @@ CREATE TABLE store_user (
 -- SKU table
 CREATE TABLE sku (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     category VARCHAR(100),
     description TEXT,
     price DECIMAL(12, 2),

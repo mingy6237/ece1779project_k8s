@@ -25,16 +25,38 @@ func GetInventory(c *gin.Context) {
 		return
 	}
 
+	// Parse UUID query parameters
+	var storeID *uuid.UUID
+	var skuID *uuid.UUID
+
+	if params.StoreID != nil && *params.StoreID != "" {
+		parsedStoreID, err := uuid.Parse(*params.StoreID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid query parameters", "errors": "Invalid store_id format"})
+			return
+		}
+		storeID = &parsedStoreID
+	}
+
+	if params.SKUID != nil && *params.SKUID != "" {
+		parsedSKUID, err := uuid.Parse(*params.SKUID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid query parameters", "errors": "Invalid sku_id format"})
+			return
+		}
+		skuID = &parsedSKUID
+	}
+
 	// Get user role and ID from context
 	userRole, _ := c.Get("userRole")
-	userIDStr, _ := c.Get("userID")
-	userIDUUID, _ := uuid.Parse(userIDStr.(string))
+	userIDRaw, _ := c.Get("userID")
+	userIDUUID := userIDRaw.(uuid.UUID)
 
 	// For staff, verify access if store_id is specified
-	if userRole == "staff" && params.StoreID != nil {
+	if userRole == "staff" && storeID != nil {
 		// Verify staff belongs to the specified store
 		var storeUser models.StoreUser
-		if err := database.DB.Where("user_id = ? AND store_id = ?", userIDUUID, *params.StoreID).
+		if err := database.DB.Where("user_id = ? AND store_id = ?", userIDUUID, *storeID).
 			First(&storeUser).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				c.JSON(http.StatusForbidden, gin.H{"message": "You can only access inventory for your assigned stores"})
@@ -46,7 +68,7 @@ func GetInventory(c *gin.Context) {
 	}
 
 	// Query inventory - service will handle store filtering based on user role
-	result, err := inventoryService.GetInventory(params, &userIDUUID, userRole.(string))
+	result, err := inventoryService.GetInventory(params, storeID, skuID, &userIDUUID, userRole.(string))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to query inventory", "error": err.Error()})
 		return
@@ -69,7 +91,7 @@ func GetInventoryByID(c *gin.Context) {
 	userRole, _ := c.Get("userRole")
 	if userRole == "staff" {
 		userID, _ := c.Get("userID")
-		userIDUUID, _ := uuid.Parse(userID.(string))
+		userIDUUID := userID.(uuid.UUID)
 
 		// Need to know the storeID for this inventory: do a pre-query for permission before proceeding.
 		var inventory models.Inventory
@@ -121,7 +143,7 @@ func CreateInventory(c *gin.Context) {
 	// Get user info from context
 	userID, _ := c.Get("userID")
 	userName, _ := c.Get("userName")
-	userIDUUID, _ := uuid.Parse(userID.(string))
+	userIDUUID := userID.(uuid.UUID)
 
 	// Create inventory
 	inventory, err := inventoryService.CreateInventory(req, userIDUUID, userName.(string))
@@ -161,7 +183,7 @@ func UpdateInventory(c *gin.Context) {
 	// Get user info from context
 	userID, _ := c.Get("userID")
 	userName, _ := c.Get("userName")
-	userIDUUID, _ := uuid.Parse(userID.(string))
+	userIDUUID := userID.(uuid.UUID)
 
 	// Update inventory
 	inventory, err := inventoryService.UpdateInventory(inventoryID, req.Quantity, userIDUUID, userName.(string))
@@ -190,7 +212,7 @@ func DeleteInventory(c *gin.Context) {
 	// Get user info from context
 	userID, _ := c.Get("userID")
 	userName, _ := c.Get("userName")
-	userIDUUID, _ := uuid.Parse(userID.(string))
+	userIDUUID := userID.(uuid.UUID)
 
 	// Delete inventory
 	if err := inventoryService.DeleteInventory(inventoryID, userIDUUID, userName.(string)); err != nil {
@@ -227,7 +249,7 @@ func AdjustInventory(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	userName, _ := c.Get("userName")
 	userRole, _ := c.Get("userRole")
-	userIDUUID, _ := uuid.Parse(userID.(string))
+	userIDUUID := userID.(uuid.UUID)
 
 	// Check permissions: staff can only adjust their store's inventory
 	if userRole == "staff" {

@@ -12,8 +12,8 @@ copy and rename `example.env` to `.env`
 
 | Service | Port | URL |
 |---------|------|-----|
-| API Server | 3000 | `http://localhost:3000` |
-| WebSocket | 3000 | `ws://localhost:3000/ws` |
+| API Server | 8080 | `http://localhost:8080` |
+| WebSocket | 8080 | `ws://localhost:8080/api/ws?token=<jwt_token>` |
 | PostgreSQL | 15432 | `localhost:15432` |
 | Redis | 16379 | `localhost:16379` |
 | Kafka | 19092 | `localhost:19092` |
@@ -36,7 +36,7 @@ docker compose down -v
 **5. Health Check**
 
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:8080/health
 # Expected: {"status":"ok"}
 ```
 
@@ -1032,9 +1032,22 @@ Adjust inventory quantity by delta (add or subtract).
 
 ### Connection
 
-**URL:** `ws://localhost:3000/ws` or `wss://your-api-domain.com/ws`
+**URL:** `ws://localhost:8080/api/ws?token=<jwt_token>` or `wss://your-api-domain.com/api/ws?token=<jwt_token>`
 
-**Authentication:** Include JWT token in Authorization header when upgrading connection.
+**Authentication:** Include JWT token as a query parameter named `token` in the WebSocket connection URL.
+
+**Example:**
+
+```javascript
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const ws = new WebSocket(`ws://localhost:8080/api/ws?token=${token}`);
+```
+
+**Response Codes:**
+
+- **101 Switching Protocols**: Connection upgraded successfully
+- **401 Unauthorized**: Token missing or invalid
+- **503 Service Unavailable**: WebSocket Hub not initialized
 
 ### Server → Client Events
 
@@ -1046,7 +1059,9 @@ Broadcast when inventory is updated from another instance.
 
 ```json
 {
+  "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
   "operation_type": "adjust",
+  "sender_instance_id": "inventorymanagerserver-1",
   "inventory_id": "550e8400-e29b-41d4-a716-446655440000",
   "sku_id": "ed74446a-905b-4ea7-95cf-9e09c92e5c96",
   "sku_name": "Wireless Mouse",
@@ -1056,7 +1071,9 @@ Broadcast when inventory is updated from another instance.
   "user_name": "John Doe",
   "delta_quantity": -5,
   "new_quantity": 95,
-  "version": 2
+  "version": 2,
+  "created_at": "2025-01-20T14:30:00Z",
+  "updated_at": "2025-01-20T14:30:00Z"
 }
 ```
 

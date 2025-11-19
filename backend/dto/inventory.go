@@ -33,12 +33,12 @@ type UpdateInventoryRequest struct {
 
 // InventoryQueryParams represents query parameters for inventory listing
 type InventoryQueryParams struct {
-	StoreID  *uuid.UUID `form:"store_id"` // Single store ID from query parameter, nil means all stores
-	SKUID    *uuid.UUID `form:"sku_id"`
-	Page     int        `form:"page,default=1" binding:"min=1"`
-	PageSize int        `form:"page_size,default=20" binding:"min=1,max=100"`
-	SortBy   string     `form:"sort_by,default=created_at"`
-	Order    string     `form:"order,default=desc" binding:"oneof=asc desc"`
+	StoreID  *string `form:"store_id"` // Single store ID from query parameter, nil means all stores
+	SKUID    *string `form:"sku_id"`
+	Page     int     `form:"page,default=1" binding:"min=1"`
+	PageSize int     `form:"page_size,default=20" binding:"min=1,max=100"`
+	SortBy   string  `form:"sort_by,default=created_at"`
+	Order    string  `form:"order,default=desc" binding:"oneof=asc desc"`
 }
 
 // InventoryListResponse represents the response for listing inventory

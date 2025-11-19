@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -170,6 +172,15 @@ func CreateSKU(c *gin.Context) {
 	}
 
 	if err := database.DB.Create(&sku).Error; err != nil {
+		// Check for unique constraint violation using PostgreSQL error code
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			// 23505 is the error code for unique_violation in PostgreSQL
+			if strings.Contains(pgErr.ConstraintName, "name") {
+				c.JSON(http.StatusBadRequest, gin.H{"message": "SKU name already exists"})
+				return
+			}
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create SKU"})
 		return
 	}
@@ -235,6 +246,15 @@ func UpdateSKU(c *gin.Context) {
 	sku.Version++
 
 	if err := database.DB.Save(&sku).Error; err != nil {
+		// Check for unique constraint violation using PostgreSQL error code
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			// 23505 is the error code for unique_violation in PostgreSQL
+			if strings.Contains(pgErr.ConstraintName, "name") {
+				c.JSON(http.StatusBadRequest, gin.H{"message": "SKU name already exists"})
+				return
+			}
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update SKU"})
 		return
 	}

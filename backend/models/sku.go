@@ -9,7 +9,7 @@ import (
 // SKU represents a product model
 type SKU struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
-	Name        string    `gorm:"not null;size:100" json:"name"`
+	Name        string    `gorm:"not null;size:100;unique" json:"name"`
 	Category    string    `gorm:"size:100" json:"category"`
 	Description string    `gorm:"type:text" json:"description"`
 	Price       float64   `gorm:"type:decimal(12,2)" json:"price"`

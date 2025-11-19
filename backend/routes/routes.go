@@ -19,10 +19,17 @@ func SetupRoutes() *gin.Engine {
 	}))
 	router.Use(gin.Recovery())
 
-	// CORS middleware
+	// CORS middleware - permissive configuration
 	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		origin := c.Request.Header.Get("Origin")
+
+		// Set CORS headers for all requests
+		if origin != "" {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 
@@ -30,7 +37,6 @@ func SetupRoutes() *gin.Engine {
 			c.AbortWithStatus(204)
 			return
 		}
-
 		c.Next()
 	})
 
@@ -43,6 +49,12 @@ func SetupRoutes() *gin.Engine {
 
 	// Public route
 	router.POST("/api/auth/login", handlers.Login)
+
+	// WebSocket route (uses query parameter authentication, not middleware)
+	router.GET("/api/ws", func(c *gin.Context) {
+		websocket.ServeWS(c.Writer, c.Request)
+	})
+
 	router.NoRoute(func(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "Route not found"})
 	})
@@ -54,7 +66,7 @@ func SetupRoutes() *gin.Engine {
 	// User profile route
 	userProfile := authed.Group("/profile")
 	{
-		userProfile.GET("/", handlers.GetProfile)
+		userProfile.GET("", handlers.GetProfile)
 		userProfile.PUT("/password", handlers.ChangePassword)
 	}
 
@@ -62,9 +74,9 @@ func SetupRoutes() *gin.Engine {
 	userManagement := authed.Group("/manager/users")
 	userManagement.Use(middleware.ManagerOnly())
 	{
-		userManagement.GET("/", handlers.ListUsers)
-		userManagement.POST("/", handlers.CreateUser)
-		userManagement.PUT("/", handlers.UpdateUser)
+		userManagement.GET("", handlers.ListUsers)
+		userManagement.POST("", handlers.CreateUser)
+		userManagement.PUT("", handlers.UpdateUser)
 		userManagement.DELETE("/:id", handlers.DeleteUser)
 	}
 
@@ -72,13 +84,13 @@ func SetupRoutes() *gin.Engine {
 	storeManagement := authed.Group("/manager/stores")
 	storeManagement.Use(middleware.ManagerOnly())
 	{
-		storeManagement.GET("/", handlers.ListStores)
-		storeManagement.POST("/", handlers.CreateStore)
+		storeManagement.GET("", handlers.ListStores)
+		storeManagement.POST("", handlers.CreateStore)
 		storeManagement.DELETE("/:id", handlers.DeleteStore)
 		staffManagement := storeManagement.Group("/staff")
 		{
-			staffManagement.GET("/", handlers.ListStoreStaff)
-			staffManagement.POST("/", handlers.AddStaffToStore)
+			staffManagement.GET("", handlers.ListStoreStaff)
+			staffManagement.POST("", handlers.AddStaffToStore)
 			staffManagement.DELETE("/:id", handlers.DeleteStaffFromStore)
 		}
 	}
@@ -87,10 +99,10 @@ func SetupRoutes() *gin.Engine {
 	skuManagement := authed.Group("/manager/skus")
 	skuManagement.Use(middleware.ManagerOnly())
 	{
-		skuManagement.GET("/", handlers.ListSKUs)
+		skuManagement.GET("", handlers.ListSKUs)
 		skuManagement.GET("/categories", handlers.ListSKUCategories)
 		skuManagement.GET("/:id", handlers.GetSKU)
-		skuManagement.POST("/", handlers.CreateSKU)
+		skuManagement.POST("", handlers.CreateSKU)
 		skuManagement.PUT("/:id", handlers.UpdateSKU)
 		skuManagement.DELETE("/:id", handlers.DeleteSKU)
 	}
@@ -98,7 +110,7 @@ func SetupRoutes() *gin.Engine {
 	// Inventory management route (all authenticated users can query)
 	inventory := authed.Group("/inventory")
 	{
-		inventory.GET("/", handlers.GetInventory)
+		inventory.GET("", handlers.GetInventory)
 		inventory.GET("/:id", handlers.GetInventoryByID)
 		// Adjust endpoint - staff can only adjust their store's inventory
 		inventory.POST("/:id/adjust", handlers.AdjustInventory)
@@ -108,15 +120,10 @@ func SetupRoutes() *gin.Engine {
 	inventoryManagement := authed.Group("/manager/inventory")
 	inventoryManagement.Use(middleware.ManagerOnly())
 	{
-		inventoryManagement.POST("/", handlers.CreateInventory)
+		inventoryManagement.POST("", handlers.CreateInventory)
 		inventoryManagement.PUT("/:id", handlers.UpdateInventory)
 		inventoryManagement.DELETE("/:id", handlers.DeleteInventory)
 	}
-
-	// Setup WebSocket routes
-	authed.GET("/ws", func(c *gin.Context) {
-		websocket.ServeWS(c.Writer, c.Request)
-	})
 
 	return router
 }

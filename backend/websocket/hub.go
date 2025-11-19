@@ -47,7 +47,7 @@ func (h *HubType) Run() {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
-			log.Printf("Client registered. Total clients: %d", len(h.clients))
+			log.Printf("Client registered (UserID: %s, Role: %s). Total clients: %d", client.UserID, client.Role, len(h.clients))
 
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {

@@ -1,7 +1,6 @@
 package events
 
 import (
-	"inventory-manager-server/config"
 	"inventory-manager-server/dto"
 	"inventory-manager-server/websocket"
 	"log"
@@ -16,14 +15,16 @@ func InventoryUpdateHandler(msg *sarama.ConsumerMessage) {
 		log.Printf("Warning: Failed to unmarshal message: %v (continuing without Kafka consumer)", err)
 		return
 	}
-	if message.SenderInstanceID != config.CONFIG.InstanceID {
-		// This message is from another instance, broadcast it via WebSocket
-		if websocket.Hub != nil {
-			messageBytes, err := sonic.Marshal(message.Payload)
-			if err == nil {
-				websocket.Hub.Broadcast(messageBytes)
-			}
+
+	// Broadcast to WebSocket for all messages (both from this instance and other instances)
+	// This ensures all connected clients receive updates regardless of which node they're connected to
+	if websocket.Hub != nil {
+		messageBytes, err := sonic.Marshal(message.Payload)
+		if err == nil {
+			websocket.Hub.Broadcast(messageBytes)
+			log.Printf("Broadcasted inventory update from instance %s", message.SenderInstanceID)
+		} else {
+			log.Printf("Failed to marshal message payload: %v", err)
 		}
-		return
 	}
 }

@@ -21,12 +21,6 @@ type CreateStoreRequest struct {
 	Address string `json:"address" binding:"required,max=255"`
 }
 
-// UpdateStoreRequest represents a request to update store information
-type UpdateStoreRequest struct {
-	Name    string `json:"name" binding:"omitempty,max=100"`
-	Address string `json:"address" binding:"omitempty,max=255"`
-}
-
 // AddStaffToStoreRequest represents a request to add staff to a store
 type AddStaffToStoreRequest struct {
 	StoreID uuid.UUID `json:"store_id" binding:"required"`

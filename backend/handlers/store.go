@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
 	"inventory-manager-server/database"
 	"inventory-manager-server/dto"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +32,19 @@ func CreateStore(c *gin.Context) {
 	}
 
 	if err := database.DB.Create(&store).Error; err != nil {
+		// Check for unique constraint violation using PostgreSQL error code
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			// 23505 is the error code for unique_violation in PostgreSQL
+			if strings.Contains(pgErr.ConstraintName, "name") {
+				c.JSON(http.StatusBadRequest, gin.H{"message": "Store name already exists"})
+				return
+			}
+			if strings.Contains(pgErr.ConstraintName, "address") {
+				c.JSON(http.StatusBadRequest, gin.H{"message": "Store address already exists"})
+				return
+			}
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create store"})
 		return
 	}
