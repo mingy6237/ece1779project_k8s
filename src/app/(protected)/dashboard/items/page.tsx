@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Trash2Icon } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
+import { useInventoryUpdates } from '@/context/inventory-updates-context';
 import { useApiQuery } from '@/hooks/useApiQuery';
 import {
   CreateInventoryRequest,
@@ -16,6 +17,7 @@ import {
 
 export default function ItemsPage() {
   const { api, user } = useAuth();
+  const { lastEvent } = useInventoryUpdates();
   const [skuFilters, setSkuFilters] = useState<SKUListFilters>({
     page: 1,
     page_size: 20,
@@ -78,6 +80,26 @@ export default function ItemsPage() {
       setSelectedInventory(inventoryQuery.data.items[0]);
     }
   }, [inventoryQuery.data, selectedInventory]);
+
+  // Auto-reload inventory when WebSocket events are received
+  useEffect(() => {
+    if (lastEvent) {
+      inventoryQuery.reload();
+    }
+  }, [lastEvent]);
+
+  // Update selectedInventory when inventory data is reloaded
+  useEffect(() => {
+    if (selectedInventory && inventoryQuery.data?.items) {
+      const updatedRecord = inventoryQuery.data.items.find(
+        (item) => item.id === selectedInventory.id
+      );
+      if (updatedRecord) {
+        setSelectedInventory(updatedRecord);
+        setSetQuantity(updatedRecord.quantity);
+      }
+    }
+  }, [inventoryQuery.data]);
 
   const handleSearch = () => {
     setSkuFilters((prev) => ({
