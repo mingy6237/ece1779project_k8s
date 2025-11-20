@@ -1,263 +1,276 @@
-# 部署指南 - Minikube
+# Deployment Guide - Minikube
 
-本指南将帮助您将库存管理系统前后端部署到 Minikube 上。
+This guide will help you deploy the inventory management system frontend and backend to Minikube.
 
-## 📋 前置要求
+## 📋 Prerequisites
 
-1. **Minikube** - 已安装并运行
-2. **kubectl** - Kubernetes 命令行工具
-3. **Docker** - 用于构建镜像
+1. **Minikube** - Installed and running
+2. **kubectl** - Kubernetes command-line tool
+3. **Docker** - For building images
 
-## 🚀 快速部署
+## 🚀 Quick Deployment
 
-### 1. 启动 Minikube
+### 1. Start Minikube
 
 ```bash
 minikube start
 ```
 
-### 2. 运行部署脚本
+### 2. Run Deployment Script
 
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
 
-部署脚本会自动完成所有步骤，包括：
-- 启用 Ingress 插件
-- 构建 Docker 镜像
-- 部署所有 Kubernetes 资源
-- 等待服务就绪
+The deployment script will automatically complete all steps, including:
+- Enable Ingress addon
+- Build Docker images
+- Deploy all Kubernetes resources
+- Wait for services to be ready
 
-## 🌐 访问应用
+## 🌐 Accessing the Application
 
-部署完成后，有两种方式访问应用：
+After deployment, there are two ways to access the application:
 
-### 方式 1: 通过 Ingress（推荐）
+### Method 1: Via Ingress (Recommended)
 
-1. 添加 hosts 条目：
+1. Add hosts entry:
 
 ```bash
-echo "$(minikube ip) inventory.local" | sudo tee -a /etc/hosts
+echo '127.0.0.1 inventory.local' | sudo tee -a /etc/hosts
 ```
 
-2. 访问应用：
+2. Start minikube tunnel (required for Ingress on macOS with Docker driver):
+
+```bash
+sudo minikube tunnel
+```
+
+Keep this terminal window open.
+
+3. Access the application:
 
 ```
 http://inventory.local
 ```
 
-### 方式 2: 通过 NodePort
+### Method 2: Via NodePort
 
 ```bash
-# 获取 Minikube IP
+# Get Minikube IP
 MINIKUBE_IP=$(minikube ip)
 
-# 获取前端 NodePort
+# Get frontend NodePort
 FRONTEND_PORT=$(kubectl get svc frontend -n inventory-manager -o jsonpath='{.spec.ports[0].nodePort}')
 
-# 访问应用
-echo "访问地址: http://${MINIKUBE_IP}:${FRONTEND_PORT}"
+# Access the application
+echo "Access URL: http://${MINIKUBE_IP}:${FRONTEND_PORT}"
 ```
 
-## 🔐 默认登录信息
+## 🔐 Default Login Credentials
 
-- **用户名**: `admin`
-- **密码**: `adminadmin`
+- **Username**: `admin`
+- **Password**: `adminadmin`
 
-## 📊 架构说明
+## 📊 Architecture Overview
 
-### 服务组件
+### Service Components
 
-1. **PostgreSQL** - 主数据库
-   - StatefulSet 部署
-   - 持久化存储
-   - 自动初始化数据库结构
+1. **PostgreSQL** - Primary database
+   - Deployed as StatefulSet
+   - Persistent storage
+   - Automatic database schema initialization
 
-2. **Redis** - 缓存服务
-   - Deployment 部署
-   - 用于缓存数据
+2. **Redis** - Cache service
+   - Deployed as Deployment
+   - Used for data caching
 
-3. **Kafka** - 消息队列
-   - StatefulSet 部署
-   - 用于库存更新事件
+3. **Kafka** - Message queue
+   - Deployed as StatefulSet
+   - Used for inventory update events
 
-4. **Backend** - 后端 API 服务
-   - Deployment 部署（2 个副本）
-   - Go 应用
-   - 端口: 3000
+4. **Backend** - Backend API service
+   - Deployed as Deployment (2 replicas)
+   - Go application
+   - Port: 3000
 
-5. **Frontend** - 前端应用
-   - Deployment 部署
-   - Next.js 应用
-   - 端口: 3000
+5. **Frontend** - Frontend application
+   - Deployed as Deployment
+   - Next.js application
+   - Port: 3000
 
-### 网络配置
+### Network Configuration
 
-- 所有服务在 `inventory-manager` 命名空间中
-- 服务间通过 Service 名称通信
-- 前端通过 Ingress 在 `/` 路径暴露
-- 后端 API 通过 Ingress 的 `/api` 路径暴露
-- WebSocket 连接通过 Ingress 支持
+- All services are in the `inventory-manager` namespace
+- Services communicate via Service names
+- Frontend is exposed via Ingress at `/` path
+- Backend API is exposed via Ingress at `/api` path
+- WebSocket connections are supported through Ingress
 
-## 🔍 验证部署
+## 🔍 Verifying Deployment
 
-### 检查 Pod 状态
+### Check Pod Status
 
 ```bash
 kubectl get pods -n inventory-manager
 ```
 
-所有 Pod 应该显示 `Running` 状态。
+All pods should show `Running` status.
 
-### 检查服务状态
+### Check Service Status
 
 ```bash
 kubectl get svc -n inventory-manager
 ```
 
-### 查看日志
+### View Logs
 
 ```bash
-# 后端日志
+# Backend logs
 kubectl logs -f deployment/backend -n inventory-manager
 
-# 前端日志
+# Frontend logs
 kubectl logs -f deployment/frontend -n inventory-manager
 
-# 数据库日志
+# Database logs
 kubectl logs -f statefulset/postgres -n inventory-manager
 ```
 
-### 测试健康检查
+### Test Health Check
 
 ```bash
-# 测试后端健康检查
+# Test backend health check
 curl http://inventory.local/api/health
 
-# 或直接测试后端服务
+# Or test backend service directly
 kubectl exec -it deployment/backend -n inventory-manager -- wget -qO- http://localhost:3000/health
 ```
 
-## 🛠️ 故障排查
+## 🛠️ Troubleshooting
 
-### Pod 无法启动
+### Pods Not Starting
 
 ```bash
-# 查看 Pod 详细信息
+# View pod details
 kubectl describe pod <pod-name> -n inventory-manager
 
-# 查看 Pod 日志
+# View pod logs
 kubectl logs <pod-name> -n inventory-manager
 ```
 
-### 服务无法连接
+### Service Connection Issues
 
 ```bash
-# 检查服务端点
+# Check service endpoints
 kubectl get endpoints -n inventory-manager
 
-# 测试服务连接
+# Test service connection
 kubectl run -it --rm debug --image=busybox --restart=Never -- sh
-# 在容器内测试连接
+# Inside the container, test connection
 # wget -qO- http://backend:3000/health
 ```
 
-### 数据库连接问题
+### Database Connection Issues
 
 ```bash
-# 检查数据库 Pod
+# Check database pod
 kubectl get pods -l app=postgres -n inventory-manager
 
-# 查看数据库日志
+# View database logs
 kubectl logs -l app=postgres -n inventory-manager
 
-# 进入数据库 Pod
+# Access database pod
 kubectl exec -it statefulset/postgres -n inventory-manager -- psql -U postgres -d inventory_db
 ```
 
-### Ingress 问题
+### Ingress Issues
 
 ```bash
-# 检查 Ingress 状态
+# Check Ingress status
 kubectl get ingress -n inventory-manager
 
-# 查看 Ingress 详细信息
+# View Ingress details
 kubectl describe ingress inventory-manager-ingress -n inventory-manager
 
-# 检查 Ingress Controller
+# Check Ingress Controller
 kubectl get pods -n ingress-nginx
+
+# Ensure minikube tunnel is running (for macOS Docker driver)
+sudo minikube tunnel
 ```
 
-## 🧹 清理部署
+## 🧹 Cleaning Up Deployment
 
 ```bash
-# 删除所有资源
+# Delete all resources
 kubectl delete namespace inventory-manager
 
-# 或删除单个资源
+# Or delete individual resources
 kubectl delete -f k8s/
 ```
 
-## 🔄 更新部署
+## 🔄 Updating Deployment
 
-### 更新后端
+### Update Backend
 
 ```bash
-# 重新构建镜像
+# Rebuild image
+eval $(minikube docker-env)
 cd InventoryManagerServer/backend
 docker build -t inventory-backend:latest .
 cd ../..
 
-# 重启部署
+# Restart deployment
 kubectl rollout restart deployment/backend -n inventory-manager
 ```
 
-### 更新前端
+### Update Frontend
 
 ```bash
-# 重新构建镜像
+# Rebuild image
+eval $(minikube docker-env)
 cd inventory-manager-frontend
 docker build -t inventory-frontend:latest .
-cd ..
+cd ../..
 
-# 重启部署
+# Restart deployment
 kubectl rollout restart deployment/frontend -n inventory-manager
 ```
 
-## 📈 扩展部署
+## 📈 Scaling Deployment
 
-### 增加后端副本数
+### Scale Backend Replicas
 
 ```bash
 kubectl scale deployment backend --replicas=3 -n inventory-manager
 ```
 
-### 增加前端副本数
+### Scale Frontend Replicas
 
 ```bash
 kubectl scale deployment frontend --replicas=2 -n inventory-manager
 ```
 
-## 📝 注意事项
+## 📝 Important Notes
 
-1. **镜像拉取策略**: 所有部署使用 `imagePullPolicy: Never`，因为镜像在 Minikube 的 Docker 守护进程中构建
-2. **持久化存储**: PostgreSQL 和 Kafka 使用 PersistentVolumeClaim 存储数据
-3. **环境变量**: 敏感信息（如密码）存储在 Secrets 中
-4. **健康检查**: 所有服务都配置了 liveness 和 readiness 探针
-5. **CORS**: 后端已配置 CORS，允许跨域请求
-6. **WebSocket**: Ingress 已配置支持 WebSocket 连接
+1. **Image Pull Policy**: All deployments use `imagePullPolicy: Never` because images are built in Minikube's Docker daemon
+2. **Persistent Storage**: PostgreSQL and Kafka use PersistentVolumeClaim for data storage
+3. **Environment Variables**: Sensitive information (such as passwords) is stored in Secrets
+4. **Health Checks**: All services are configured with liveness and readiness probes
+5. **CORS**: Backend is configured with CORS to allow cross-origin requests
+6. **WebSocket**: Ingress is configured to support WebSocket connections
 
-## 🔗 相关文件
+## 🔗 Related Files
 
-- `k8s/` - Kubernetes 配置文件目录
-- `deploy.sh` - 自动化部署脚本
-- `k8s/README.md` - 详细的 Kubernetes 配置说明
+- `k8s/` - Kubernetes configuration files directory
+- `deploy.sh` - Automated deployment script
+- `k8s/README.md` - Detailed Kubernetes configuration documentation
 
-## 💡 提示
+## 💡 Tips
 
-- 如果遇到端口冲突，可以修改 Service 的 NodePort
-- 如果需要修改配置，编辑 `k8s/configmap.yaml` 和 `k8s/secrets.yaml` 后重新应用
-- 生产环境建议使用外部数据库和 Redis 服务
-- 建议配置资源限制（requests/limits）以避免资源耗尽
-
+- If you encounter port conflicts, you can modify the Service's NodePort
+- To modify configuration, edit `k8s/configmap.yaml` and `k8s/secrets.yaml` then reapply
+- For production environments, consider using external database and Redis services
+- It's recommended to configure resource limits (requests/limits) to avoid resource exhaustion
+- On macOS with Docker driver, `minikube tunnel` must be running for Ingress to work properly
