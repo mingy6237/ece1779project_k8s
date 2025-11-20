@@ -2,54 +2,158 @@
 
 This guide will help you deploy the inventory management system frontend and backend to Minikube.
 
-## 📋 Prerequisites
+## Quick Start
 
-1. **Minikube** - Installed and running
-2. **kubectl** - Kubernetes command-line tool
-3. **Docker** - For building images
+If you already have the prerequisites installed:
 
-## 🚀 Quick Deployment
+```bash
+# 1. Clone the repository
+git clone https://github.com/mingy6237/ece1779project_k8s.git
+cd ece1779project_k8s
 
-### 1. Start Minikube
+# 2. Start Minikube
+minikube start
+
+# 3. Deploy everything
+chmod +x deploy.sh
+./deploy.sh
+
+# 4. Access the application
+# Add to /etc/hosts: $(minikube ip) inventory.local
+# Run: sudo minikube tunnel (in a separate terminal)
+# Open: http://inventory.local
+```
+
+Default Login: `admin` / `adminadmin`
+
+## Prerequisites
+
+Before starting, ensure you have the following tools installed:
+
+1. Git - For cloning the repository
+2. Docker - For building images
+3. Minikube - Kubernetes cluster
+4. kubectl - Kubernetes command-line tool
+
+### Installing Prerequisites
+
+#### macOS
+
+```bash
+# Install Homebrew (if not already installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Docker Desktop
+brew install --cask docker
+
+# Install Minikube
+brew install minikube
+
+# Install kubectl
+brew install kubectl
+```
+
+#### Linux
+
+```bash
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Install Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+
+#### Windows
+
+1. Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
+2. Install [Minikube](https://minikube.sigs.k8s.io/docs/start/)
+3. Install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/)
+
+### Verify Installation
+
+```bash
+docker --version
+minikube version
+kubectl version --client
+```
+
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/mingy6237/ece1779project_k8s.git
+cd ece1779project_k8s
+```
+
+### 2. Start Minikube
 
 ```bash
 minikube start
+minikube status
 ```
 
-### 2. Run Deployment Script
+Note: If you encounter issues starting Minikube, you may need to specify a driver:
+
+```bash
+# For Docker driver (recommended)
+minikube start --driver=docker
+
+# For VirtualBox driver
+minikube start --driver=virtualbox
+
+# For HyperKit driver (macOS)
+minikube start --driver=hyperkit
+```
+
+### 3. Run Deployment Script
 
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
 
-The deployment script will automatically complete all steps, including:
+The deployment script will:
+- Check if Minikube is running (starts it if not)
 - Enable Ingress addon
-- Build Docker images
-- Deploy all Kubernetes resources
-- Wait for services to be ready
+- Configure Docker to use Minikube's Docker daemon
+- Build backend and frontend Docker images
+- Create Kubernetes namespace
+- Deploy all services (PostgreSQL, Redis, Kafka, Backend, Frontend)
+- Deploy Ingress controller
 
-## 🌐 Accessing the Application
+Expected deployment time: 5-10 minutes
 
-After deployment, there are two ways to access the application:
+## Accessing the Application
 
 ### Method 1: Via Ingress (Recommended)
 
-1. Add hosts entry:
+Step 1: Add hosts entry
 
+macOS/Linux:
 ```bash
-echo '127.0.0.1 inventory.local' | sudo tee -a /etc/hosts
+echo "$(minikube ip) inventory.local" | sudo tee -a /etc/hosts
 ```
 
-2. Start minikube tunnel (required for Ingress on macOS with Docker driver):
+Windows:
+1. Open `C:\Windows\System32\drivers\etc\hosts` as Administrator
+2. Add the line: `<minikube-ip> inventory.local`
+
+Step 2: Start minikube tunnel
 
 ```bash
 sudo minikube tunnel
 ```
 
-Keep this terminal window open.
+Keep this terminal window open while using the application.
 
-3. Access the application:
+Step 3: Access the application
 
 ```
 http://inventory.local
@@ -58,47 +162,25 @@ http://inventory.local
 ### Method 2: Via NodePort
 
 ```bash
-# Get Minikube IP
 MINIKUBE_IP=$(minikube ip)
-
-# Get frontend NodePort
 FRONTEND_PORT=$(kubectl get svc frontend -n inventory-manager -o jsonpath='{.spec.ports[0].nodePort}')
-
-# Access the application
 echo "Access URL: http://${MINIKUBE_IP}:${FRONTEND_PORT}"
 ```
 
-## 🔐 Default Login Credentials
+## Default Login Credentials
 
-- **Username**: `admin`
-- **Password**: `adminadmin`
+- Username: `admin`
+- Password: `adminadmin`
 
-## 📊 Architecture Overview
+## Architecture Overview
 
 ### Service Components
 
-1. **PostgreSQL** - Primary database
-   - Deployed as StatefulSet
-   - Persistent storage
-   - Automatic database schema initialization
-
-2. **Redis** - Cache service
-   - Deployed as Deployment
-   - Used for data caching
-
-3. **Kafka** - Message queue
-   - Deployed as StatefulSet
-   - Used for inventory update events
-
-4. **Backend** - Backend API service
-   - Deployed as Deployment (2 replicas)
-   - Go application
-   - Port: 3000
-
-5. **Frontend** - Frontend application
-   - Deployed as Deployment
-   - Next.js application
-   - Port: 3000
+1. PostgreSQL - Primary database (StatefulSet)
+2. Redis - Cache service (Deployment)
+3. Kafka - Message queue (StatefulSet)
+4. Backend - Backend API service (Deployment, 2 replicas, Go, Port 3000)
+5. Frontend - Frontend application (Deployment, Next.js, Port 3000)
 
 ### Network Configuration
 
@@ -108,7 +190,7 @@ echo "Access URL: http://${MINIKUBE_IP}:${FRONTEND_PORT}"
 - Backend API is exposed via Ingress at `/api` path
 - WebSocket connections are supported through Ingress
 
-## 🔍 Verifying Deployment
+## Verifying Deployment
 
 ### Check Pod Status
 
@@ -140,137 +222,155 @@ kubectl logs -f statefulset/postgres -n inventory-manager
 ### Test Health Check
 
 ```bash
-# Test backend health check
 curl http://inventory.local/api/health
-
-# Or test backend service directly
-kubectl exec -it deployment/backend -n inventory-manager -- wget -qO- http://localhost:3000/health
 ```
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Pods Not Starting
 
 ```bash
-# View pod details
 kubectl describe pod <pod-name> -n inventory-manager
-
-# View pod logs
 kubectl logs <pod-name> -n inventory-manager
 ```
 
 ### Service Connection Issues
 
 ```bash
-# Check service endpoints
 kubectl get endpoints -n inventory-manager
-
-# Test service connection
-kubectl run -it --rm debug --image=busybox --restart=Never -- sh
-# Inside the container, test connection
-# wget -qO- http://backend:3000/health
 ```
 
 ### Database Connection Issues
 
 ```bash
-# Check database pod
 kubectl get pods -l app=postgres -n inventory-manager
-
-# View database logs
 kubectl logs -l app=postgres -n inventory-manager
-
-# Access database pod
 kubectl exec -it statefulset/postgres -n inventory-manager -- psql -U postgres -d inventory_db
 ```
 
 ### Ingress Issues
 
 ```bash
-# Check Ingress status
 kubectl get ingress -n inventory-manager
-
-# View Ingress details
 kubectl describe ingress inventory-manager-ingress -n inventory-manager
-
-# Check Ingress Controller
 kubectl get pods -n ingress-nginx
-
-# Ensure minikube tunnel is running (for macOS Docker driver)
 sudo minikube tunnel
 ```
 
-## 🧹 Cleaning Up Deployment
+## Cleaning Up Deployment
 
 ```bash
-# Delete all resources
 kubectl delete namespace inventory-manager
-
-# Or delete individual resources
-kubectl delete -f k8s/
 ```
 
-## 🔄 Updating Deployment
+## Updating Deployment
 
 ### Update Backend
 
 ```bash
-# Rebuild image
 eval $(minikube docker-env)
 cd InventoryManagerServer/backend
 docker build -t inventory-backend:latest .
 cd ../..
-
-# Restart deployment
 kubectl rollout restart deployment/backend -n inventory-manager
 ```
 
 ### Update Frontend
 
 ```bash
-# Rebuild image
 eval $(minikube docker-env)
 cd inventory-manager-frontend
 docker build -t inventory-frontend:latest .
 cd ../..
-
-# Restart deployment
 kubectl rollout restart deployment/frontend -n inventory-manager
 ```
 
-## 📈 Scaling Deployment
-
-### Scale Backend Replicas
+## Scaling Deployment
 
 ```bash
+# Scale backend replicas
 kubectl scale deployment backend --replicas=3 -n inventory-manager
-```
 
-### Scale Frontend Replicas
-
-```bash
+# Scale frontend replicas
 kubectl scale deployment frontend --replicas=2 -n inventory-manager
 ```
 
-## 📝 Important Notes
+## Important Notes
 
-1. **Image Pull Policy**: All deployments use `imagePullPolicy: Never` because images are built in Minikube's Docker daemon
-2. **Persistent Storage**: PostgreSQL and Kafka use PersistentVolumeClaim for data storage
-3. **Environment Variables**: Sensitive information (such as passwords) is stored in Secrets
-4. **Health Checks**: All services are configured with liveness and readiness probes
-5. **CORS**: Backend is configured with CORS to allow cross-origin requests
-6. **WebSocket**: Ingress is configured to support WebSocket connections
+1. Image Pull Policy: All deployments use `imagePullPolicy: Never` because images are built in Minikube's Docker daemon
+2. Persistent Storage: PostgreSQL and Kafka use PersistentVolumeClaim for data storage
+3. Environment Variables: Sensitive information is stored in Secrets
+4. Health Checks: All services are configured with liveness and readiness probes
+5. CORS: Backend is configured with CORS to allow cross-origin requests
+6. WebSocket: Ingress is configured to support WebSocket connections
+7. On macOS with Docker driver, `minikube tunnel` must be running for Ingress to work properly
 
-## 🔗 Related Files
+## FAQ
 
-- `k8s/` - Kubernetes configuration files directory
-- `deploy.sh` - Automated deployment script
-- `k8s/README.md` - Detailed Kubernetes configuration documentation
+**Q: How long does the initial deployment take?**
 
-## 💡 Tips
+A: 5-10 minutes, as it needs to download base images, build application images, and start all services.
 
-- If you encounter port conflicts, you can modify the Service's NodePort
-- To modify configuration, edit `k8s/configmap.yaml` and `k8s/secrets.yaml` then reapply
-- For production environments, consider using external database and Redis services
-- It's recommended to configure resource limits (requests/limits) to avoid resource exhaustion
-- On macOS with Docker driver, `minikube tunnel` must be running for Ingress to work properly
+**Q: Can I deploy without Ingress?**
+
+A: Yes, use Method 2 (NodePort) described in the "Accessing the Application" section.
+
+**Q: What if the deployment script fails?**
+
+A: Check the error message. Common issues:
+- Minikube not running: Run `minikube start`
+- Docker not accessible: Run `eval $(minikube docker-env)` and try again
+- Port conflicts: Check if ports are already in use
+- Insufficient resources: Increase Minikube's memory/CPU: `minikube start --memory=4096 --cpus=2`
+
+**Q: How do I check if everything is working?**
+
+A: Run:
+```bash
+kubectl get pods -n inventory-manager
+kubectl get svc -n inventory-manager
+kubectl exec -it deployment/backend -n inventory-manager -- wget -qO- http://localhost:3000/health
+```
+
+**Q: How do I completely remove the deployment?**
+
+A: Run:
+```bash
+kubectl delete namespace inventory-manager
+```
+
+To also remove Docker images:
+```bash
+eval $(minikube docker-env)
+docker rmi inventory-backend:latest inventory-frontend:latest
+```
+
+**Q: Can I change the default passwords?**
+
+A: Yes, edit `k8s/secrets.yaml` and update the values, then reapply:
+```bash
+kubectl apply -f k8s/secrets.yaml
+kubectl rollout restart deployment/backend -n inventory-manager
+```
+
+**Q: How do I view logs for debugging?**
+
+A:
+```bash
+kubectl logs -f deployment/backend -n inventory-manager
+kubectl logs -f deployment/frontend -n inventory-manager
+```
+
+**Q: The application is slow or not responding**
+
+A: Check resource usage:
+```bash
+kubectl top pods -n inventory-manager
+kubectl top node
+```
+
+If resources are low, increase Minikube resources:
+```bash
+minikube stop
+minikube start --memory=4096 --cpus=4
+```
