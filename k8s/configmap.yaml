@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: inventory-manager
+data:
+  DB_NAME: "inventory_db"
+  DB_USER: "postgres"
+  DB_PORT: "5432"
+  REDIS_PORT: "6379"
+  KAFKA_TOPIC: "inventory-updates"
+  SERVER_PORT: "3000"
+  KAFKA_BROKERS: "kafka:9092"
+
