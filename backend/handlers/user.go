@@ -89,9 +89,9 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	// Cannot delete manager users
-	if user.Role == "manager" && user.Username == "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"message": "Cannot delete the root admin user"})
+	// Cannot delete the initial admin user
+	if user.Username == "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Cannot delete the initial admin user"})
 		return
 	}
 
@@ -180,6 +180,12 @@ func UpdateUser(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		return
+	}
+
+	// Cannot modify the initial admin user
+	if user.Username == "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Cannot modify the initial admin user"})
 		return
 	}
 

@@ -95,13 +95,18 @@ func SetupRoutes() *gin.Engine {
 		}
 	}
 
-	// SKU management route
+	// SKU routes (all authenticated users can view)
+	skus := authed.Group("/skus")
+	{
+		skus.GET("", handlers.ListSKUs)
+		skus.GET("/categories", handlers.ListSKUCategories)
+		skus.GET("/:id", handlers.GetSKU)
+	}
+
+	// SKU management route (manager only - create, update, delete)
 	skuManagement := authed.Group("/manager/skus")
 	skuManagement.Use(middleware.ManagerOnly())
 	{
-		skuManagement.GET("", handlers.ListSKUs)
-		skuManagement.GET("/categories", handlers.ListSKUCategories)
-		skuManagement.GET("/:id", handlers.GetSKU)
 		skuManagement.POST("", handlers.CreateSKU)
 		skuManagement.PUT("/:id", handlers.UpdateSKU)
 		skuManagement.DELETE("/:id", handlers.DeleteSKU)
