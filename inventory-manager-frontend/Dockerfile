@@ -3,6 +3,14 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
+# Build-time env vars for Next.js (can be provided via --build-arg)
+ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_WS_URL
+
+# Expose build args as env vars so Next.js can read process.env.NEXT_PUBLIC_*
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+
 # Copy package files
 COPY package.json package-lock.json ./
 

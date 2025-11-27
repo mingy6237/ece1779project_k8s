@@ -36,8 +36,8 @@ export function InventoryUpdatesProvider({ children }: { children: React.ReactNo
     } else {
       // Build from selected server URL
       wsBaseUrl = selectedServer.url.startsWith('https')
-        ? `${selectedServer.url.replace('https', 'wss')}/api/ws`
-        : `${selectedServer.url.replace('http', 'ws')}/api/ws`;
+      ? `${selectedServer.url.replace('https', 'wss')}/api/ws`
+      : `${selectedServer.url.replace('http', 'ws')}/api/ws`;
     }
 
     let wsUrl: URL;
@@ -47,7 +47,7 @@ export function InventoryUpdatesProvider({ children }: { children: React.ReactNo
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         wsUrl = new URL(`${protocol}//${window.location.host}${wsBaseUrl}`);
       } else {
-        wsUrl = new URL(wsBaseUrl);
+      wsUrl = new URL(wsBaseUrl);
       }
     } catch (error) {
       console.error('Invalid WS URL', error, { wsBaseUrl, selectedServerUrl: selectedServer.url });

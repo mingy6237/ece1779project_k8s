@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: backend
-        image: inventory-backend:latest
-        imagePullPolicy: Never
+        image: mingy87/inventory-backend:prod
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
         env:
@@ -97,5 +97,5 @@ spec:
   ports:
   - port: 3000
     targetPort: 3000
-  type: ClusterIP
+  type: LoadBalancer
 

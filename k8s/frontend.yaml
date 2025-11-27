@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: inventory-frontend:latest
-        imagePullPolicy: Never
+        image: mingy87/inventory-frontend:prod-do
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
         env:
@@ -50,4 +50,4 @@ spec:
   ports:
   - port: 3000
     targetPort: 3000
-  type: NodePort
+  type: LoadBalancer
