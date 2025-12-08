@@ -2,12 +2,12 @@
 
 ### 1. Team Members
 
-| **Team Member** | **Student Number** | **GitHub Account** |
-| --- | --- | --- |
-| Ming Yang | 1006262223 | mingy6237 |
-| Yuan Wang | 1002766526 | konantian |
-| Yanrong Xiao | 1006026444 | axiao01 |
-| Yukun Zhou | 1010122494 | andyzhou23 |
+| **Team Member** | **Student Number** | **GitHub Account** | **Email** |
+| --- | --- | --- | --- |
+| Ming Yang | 1006262223 | mingy6237 | mingy.yang@mail.utoronto.ca |
+| Yuan Wang | 1002766526 | konantian | ywang.wang@mail.utoronto.ca |
+| Yanrong Xiao | 1006026444 | axiao01 | yanrong.xiao@mail.utoronto.ca |
+| Yukun Zhou | 1010122494 | andyzhou23 | yukun.zhou@mail.utornto.ca |
 
 ### 2. Motivation
 
@@ -250,11 +250,11 @@ Please adjust the granularity of the descriptions below to match your Git histor
 
 - **Yuan Wang – Frontend**
   - Co‑designed and implemented the Next.js UI, including dashboard, items list and detail pages, alerts, and audit log.
-  - Implemented React hooks and components for calling backend APIs, form validation, and responsive layouts with Tailwind CSS.
+  - Implemented React hooks and components for calling backend APIs, responsive layouts with Tailwind CSS, and integrated WebSocket‑driven updates into the UX.
 
 - **Yanrong Xiao – Frontend**
   - Co‑implemented authentication flow, protected routing, and the `AuthProvider` context managing JWTs and session state.
-  - Built UI components for admin workflows (user and store management) and integrated WebSocket‑driven updates into the UX.
+  - Built UI components for admin workflows (user and store management), form validation, and integrated unit tests.
 
 - **Yukun Zhou – Backend**
   - Implemented core backend modules: handlers, services, and models for users, stores, SKUs, inventory, and reports.
