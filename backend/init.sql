@@ -1,0 +1,88 @@
+-- Enable UUID extension (PostgreSQL)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- User role enum
+CREATE TYPE user_role AS ENUM ('manager', 'staff');
+
+-- User table
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    role user_role NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Store table
+CREATE TABLE stores (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    name VARCHAR(100) NOT NULL UNIQUE,
+    address VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Store-user association table
+CREATE TABLE store_user (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    store_id UUID NOT NULL REFERENCES stores (id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    version INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (store_id, user_id)
+);
+
+-- SKU table
+CREATE TABLE sku (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    name VARCHAR(100) NOT NULL UNIQUE,
+    category VARCHAR(100),
+    description TEXT,
+    price DECIMAL(12, 2),
+    version INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Inventory table
+CREATE TABLE inventory (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    sku_id UUID NOT NULL REFERENCES sku (id) ON DELETE RESTRICT,
+    store_id UUID NOT NULL REFERENCES stores (id) ON DELETE RESTRICT,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    version INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (sku_id, store_id)
+);
+
+-- Outbox table
+CREATE TABLE outbox (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    operation_type VARCHAR(20) NOT NULL,
+    sender_instance_id VARCHAR(100) NOT NULL,
+    inventory_id UUID NOT NULL,
+    sku_id UUID NOT NULL,
+    sku_name VARCHAR(100) NOT NULL,
+    store_id UUID NOT NULL,
+    store_name VARCHAR(100) NOT NULL,
+    user_id UUID NOT NULL,
+    user_name VARCHAR(100) NOT NULL,
+    delta_quantity INTEGER NOT NULL,
+    new_quantity INTEGER NOT NULL,
+    version INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for better query performance
+CREATE INDEX idx_inventory_sku ON inventory (sku_id);
+
+CREATE INDEX idx_inventory_store ON inventory (store_id);
+
+CREATE INDEX idx_outbox_sender ON outbox (sender_instance_id);
+
+CREATE INDEX idx_outbox_inventory ON outbox (inventory_id);
