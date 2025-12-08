@@ -59,7 +59,7 @@ Compared to existing tools, our approach is more flexible and future-ready. Many
 
 Chosen approach for the course project: **Kubernetes (K8s)** on **DigitalOcean Kubernetes Service**, not Docker Swarm.
 
-These components together satisfy the core course requirements for containerization and local development (Docker + Docker Compose), state management (PostgreSQL with persistent volumes on Kubernetes), deployment to a cloud provider (DigitalOcean Kubernetes), orchestration with Kubernetes resources (Deployments, Services, PersistentVolumes), and monitoring/observability via DigitalOcean’s Kubernetes dashboard, metrics, and basic CPU/memory/disk alerts.
+These components together satisfy the core course requirements for containerization and local development (Docker + Docker Compose), state management (PostgreSQL with persistent volumes on Kubernetes), deployment to a cloud provider (DigitalOcean Kubernetes), orchestration with Kubernetes resources (Deployments, Services, PersistentVolumes), and monitoring/observability via DigitalOcean’s Kubernetes dashboard, metrics, and basic CPU/memory/disk alerts; the DigitalOcean dashboard is used to monitor cluster‑level resource usage (CPU, memory, disk), and an alert policy is configured to send email notifications when CPU utilization exceeds a configured threshold so that the team can react to overload conditions.
 
 ### 5. Features
 
@@ -108,8 +108,10 @@ These components together satisfy the core course requirements for containerizat
 - **Advanced Feature – Auto‑scaling and High Availability**
   - Backend and frontend run as Kubernetes **Deployments** with multiple replicas on the managed DigitalOcean Kubernetes cluster.
   - Pods are fronted by Services and an Ingress/load balancer, with liveness/readiness probes and the ability to **scale replicas up or down** (e.g., via `kubectl scale`) to handle higher load while maintaining availability.
+  - The backend exposes a dedicated `/health` endpoint, which is used by Kubernetes `livenessProbe` and `readinessProbe` on port `3000`; if the health check fails repeatedly, the Pod is automatically restarted, providing self‑healing behavior.
+  - The Next.js frontend container is similarly configured with HTTP liveness/readiness probes on `/` (port `3000`), so unresponsive UI Pods are detected and recreated without manual intervention.
 
-These features collectively satisfy the course requirements around authentication, CRUD operations, consistency, caching, messaging, Kubernetes deployment, and real‑time behavior.
+These features collectively satisfy the course requirements around authentication, CRUD operations, consistency, caching, messaging, Kubernetes deployment, real‑time behavior, and self‑healing via liveness probes.
 
 ### 6. User Guide
 
