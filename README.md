@@ -9,6 +9,12 @@
 | Yanrong Xiao | 1006026444 | axiao01 | yanrong.xiao@mail.utoronto.ca |
 | Yukun Zhou | 1010122494 | andyzhou23 | yukun.zhou@mail.utornto.ca |
 
+### Repository Links and History
+
+The frontend was previously developed in separate repositories before being migrated into this project (the commit history was cleaned during the migration). Legacy copies of the frontend code remain available at:
+- https://github.com/axiao01/inventory-management-frontend
+- https://github.com/konantian/inventory-manager-frontend
+
 ### 2. Motivation
 
 Many businesses that manage inventory in more than one location face problems like **slow updates, missing data, and manual work**. Existing systems often don’t update in real time, so staff may not see the latest stock information. This can lead to mistakes such as overselling, running out of products, or wasting time checking stock manually.
