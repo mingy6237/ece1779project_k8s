@@ -157,7 +157,6 @@ A WebSocket status indicator (green/yellow dot) reflects real‑time connection 
   - The **Audit Log** page lists all inventory adjustments with who changed what, where, by how much, and why.
   - Use item search, location filters, and date ranges to narrow results; pagination helps navigate large histories.
 
-Screenshots can be added under a `docs/screenshots/` directory and linked into this section if desired; they will be visible directly on GitHub.
 
 ### 7. Development Guide
 
