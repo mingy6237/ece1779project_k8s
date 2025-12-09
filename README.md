@@ -291,7 +291,7 @@ Please adjust the granularity of the descriptions below to match your Git histor
 
 ## 10. Lessons Learned and Concluding Remarks
 
-- **Distributed consistency requires explicit patterns**: implementing the outbox pattern with Kafka and Redis cache invalidation reinforced the importance of handling concurrency and replication explicitly rather than relying on “best effort” updates.
+- **Distributed consistency requires explicit patterns**: implementing the outbox pattern with Kafka and Redis cache invalidation reinforced the importance of handling concurrency and replication explicitly rather than relying on "best effort" updates.
 - **Kubernetes orchestration adds real‑world complexity**: wiring multiple stateful and stateless services together (database, cache, message queue, backend, frontend) highlighted the value of health probes, proper service naming, secrets/config maps, and observability.
 - **Full‑stack integration is iterative**: aligning the frontend feature set with the backend API (including roles, validation rules, and error handling) required multiple feedback cycles, but resulted in a consistent and predictable experience.
 - **Overall**, the project gave the team hands‑on experience with a realistic cloud‑native architecture, from database and messaging layers up through a modern web UI, and significantly deepened our understanding of scalable inventory systems and distributed application design.
