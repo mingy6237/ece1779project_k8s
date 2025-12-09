@@ -22,7 +22,7 @@ The frontend was previously developed in separate repositories before being migr
 | Ming Yang       | 1006262223         | mingy6237          | mingy.yang@mail.utoronto.ca   |
 | Yuan Wang       | 1002766526         | konantian          | ywang.wang@mail.utoronto.ca   |
 | Yanrong Xiao    | 1006026444         | axiao01            | yanrong.xiao@mail.utoronto.ca |
-| Yukun Zhou      | 1010122494         | andyzhou23         | yukun.zhou@mail.utornto.ca    |
+| Yukun Zhou      | 1010122494         | andyzhou23         | yukun.zhou@mail.utoronto.ca   |
 
 ## 2. Motivation
 
