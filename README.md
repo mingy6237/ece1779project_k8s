@@ -272,7 +272,7 @@ Please adjust the granularity of the descriptions below to match your Git histor
 
 - **Yuan Wang – Frontend**
 
-  - Co‑designed and implemented the Next.js UI, including dashboard, items list and detail pages, alerts, and audit log.
+  - Co‑designed and implemented the Next.js UI, including dashboard, items list and detail pages, and alerts.
   - Implemented React hooks and components for calling backend APIs, responsive layouts with Tailwind CSS, and integrated WebSocket‑driven updates into the UX.
 
 - **Yanrong Xiao – Frontend**
@@ -282,7 +282,7 @@ Please adjust the granularity of the descriptions below to match your Git histor
 
 - **Yukun Zhou – Backend**
 
-  - Implemented core backend modules: handlers, services, and models for users, stores, SKUs, inventory, and reports.
+  - Implemented core backend modules: handlers, services, and models for users, stores, SKUs, inventory, etc.
   - Added Redis caching, Kafka producer/consumer logic, outbox processing, and the WebSocket hub to support real‑time, distributed inventory updates.
 
 - **Ming Yang – DevOps / Kubernetes**
