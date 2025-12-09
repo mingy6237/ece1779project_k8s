@@ -1,6 +1,9 @@
 # Final Report - Inventory Management System
 
-## 0. Demo Video Link & Repository Memo
+## 0. Deployment Link, Demo Video Link & Repository Memo
+
+Deployment Link:
+http://209.38.10.93:3000
 
 Demo Video:
 https://drive.google.com/drive/folders/1qoFHWz1hmt2rJ-tTiNDw_6F0OQ8MnOsb?usp=sharing
@@ -170,17 +173,13 @@ A WebSocket status indicator (green/yellow dot) reflects real‑time connection 
 - **Adjusting Stock**
 
   - From the items table or item detail page, open the **Adjust Stock** modal.
-  - Select a location, choose Add/Remove, enter a positive quantity and a reason (and optional reference), then submit.
+  - Select a location, choose Add/Remove, enter a positive quantity, then submit.
   - The UI validates input, prevents removing more than existing stock, and updates affected views immediately; other sessions see updates via WebSocket.
 
 - **Working with Alerts**
 
-  - Open the **Alerts** page to view low‑stock and out‑of‑stock alerts, filter by status (All/Open/Acknowledged/Resolved), and review key details (SKU, location, quantities, thresholds).
-  - Managers can acknowledge, resolve, or snooze alerts; staff have view‑only permissions.
-
-- **Using the Audit Log**
-  - The **Audit Log** page lists all inventory adjustments with who changed what, where, by how much, and why.
-  - Use item search, location filters, and date ranges to narrow results; pagination helps navigate large histories.
+  - Open the **Alerts** page to view low‑stock and out‑of‑stock alerts
+  - Users can resolve alerts by adding stock.
 
 ## 7. Development Guide
 
