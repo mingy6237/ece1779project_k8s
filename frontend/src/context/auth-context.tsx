@@ -5,7 +5,6 @@ import { createApiClient, loginRequest } from '@/lib/api-client';
 import { ApiClient } from '@/lib/api-client';
 import { LoginRequest, LoginResponse, User } from '@/lib/types';
 import { useServer } from '@/context/server-context';
-import { API_BASE_URL } from '@/lib/config';
 
 type PersistMode = 'local' | 'session';
 
@@ -91,10 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setInitialised(true);
   }, []);
 
-  const api = useMemo(
-    () => (token ? createApiClient(token, selectedServer.url || API_BASE_URL) : null),
-    [token, selectedServer.url],
-  );
+  const api = useMemo(() => (token ? createApiClient(token, selectedServer.url) : null), [token, selectedServer.url]);
 
   useEffect(() => {
     if (!token || !api || !initialised) {
@@ -131,8 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (credentials: LoginRequest) => {
-      const baseUrl = selectedServer.url || API_BASE_URL;
-      const response = await loginRequest(credentials, baseUrl);
+      const response = await loginRequest(credentials, selectedServer.url);
       const remember = credentials.rememberMe ?? false;
       const mode: PersistMode = remember ? 'local' : 'session';
       setPersistMode(mode);

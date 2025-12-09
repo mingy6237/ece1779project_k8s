@@ -61,8 +61,7 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
 }
 
 export async function loginRequest(body: LoginRequest, baseUrl = API_BASE_URL): Promise<LoginResponse> {
-  const apiPath = baseUrl ? `${baseUrl}/api/auth/login` : '/api/auth/login';
-  const response = await fetch(apiPath, {
+  const response = await fetch(`${baseUrl}/api/auth/login`, {
     method: 'POST',
     headers: jsonHeaders,
     body: JSON.stringify(body),
