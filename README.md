@@ -3,7 +3,7 @@
 ## 0. Deployment Link, Demo Video Link & Repository Memo
 
 Deployment Link:
-http://209.38.10.93:3000
+http://209.38.10.93:3000 (Require some time when cold start after idling a while)
 
 Demo Video:
 https://drive.google.com/drive/folders/1qoFHWz1hmt2rJ-tTiNDw_6F0OQ8MnOsb?usp=sharing
