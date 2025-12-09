@@ -161,13 +161,13 @@ A WebSocket status indicator (green/yellow dot) reflects real‑time connection 
 
 - **Login**
 
-  - Go to the login page, enter username and password, optionally check “Remember Me,” then submit.
+  - Go to the login page, enter username and password, optionally check "Remember Me" then submit.
   - On success you are redirected to the dashboard; on failure a clear error message is shown.
 
 - **Browsing and Managing Items**
 
   - Navigate to **Items** to see the full SKU list with category and location filters, search, sorting, and pagination.
-  - Click “Add New Item” to create a SKU with basic info, category, optional image URL, threshold, and initial per‑location quantities.
+  - Click "Add New Item" to create a SKU with basic info, category, optional image URL, threshold, and initial per‑location quantities.
   - Click on a row to open the **Item Detail** page, where you can view overview, locations; managers can edit or delete.
 
 - **Adjusting Stock**
